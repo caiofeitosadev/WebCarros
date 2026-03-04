@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth';
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const schema = z.object({
   name: z.string().min(5, 'O nome deve ter pelo menos 5 caracteres!'),
@@ -61,7 +62,7 @@ export function Register() {
         email: data.email,
         uid: username.user.uid,
       });
-      console.log('Cadastrado com sucesso!');
+      toast.success('Bem-vindo(a) ao WebCarros!');
       navigate('/dashboard', { replace: true });
     } catch (err) {
       console.log(err);

@@ -12,6 +12,7 @@ import { storage, db } from '../../../services/firebaseConnection';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { addDoc, collection } from 'firebase/firestore';
 import { useNavigate } from 'react-router';
+import toast from 'react-hot-toast';
 
 const schema = z.object({
   name: z.string().nonempty('O campo "Nome" é obrigatório'),
@@ -61,7 +62,7 @@ export function NewCar() {
 
   async function onSubmit(data: FormData) {
     if (carImages.length === 0) {
-      alert('Envie pelo menos uma imagem desse carro!');
+      toast.error('Envie pelo menos uma imagem desse carro!');
       return;
     }
 
@@ -85,9 +86,13 @@ export function NewCar() {
 
       reset();
       setCarImages([]);
+      toast.success('Carro cadastrado com sucesso!');
       navigate('/dashboard');
     } catch (err) {
       console.log(err);
+      toast.error(
+        'Ocorreu um erro ao cadastrar o seu carro. Por favor, tente novamente!',
+      );
     }
   }
 
@@ -97,7 +102,7 @@ export function NewCar() {
     const image = e.target.files[0];
 
     if (image.type !== 'image/jpeg' && image.type !== 'image/png') {
-      alert('São permitidas apenas imagens JPEG ou PNG');
+      toast.error('São permitidas apenas imagens JPEG ou PNG');
       return;
     }
 
