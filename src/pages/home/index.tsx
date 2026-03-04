@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Container } from '../../components/container';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { db } from '../../services/firebaseConnection';
 import { FiMapPin } from 'react-icons/fi';
 import { Link } from 'react-router';
@@ -9,6 +9,7 @@ import type { CarProps } from '../../types/CarProps';
 export function Home() {
   const [cars, setCars] = useState<CarProps[]>([]);
   const [loadImages, setLoadImages] = useState<string[]>([]);
+  const [input, setInput] = useState<string>('');
 
   useEffect(() => {
     async function loadCars() {
@@ -38,8 +39,67 @@ export function Home() {
     loadCars();
   }, []);
 
+  async function loadPrevCars() {
+    const carsRef = collection(db, 'cars');
+    const queryRef = query(carsRef, orderBy('created', 'asc'));
+
+    try {
+      const response = await getDocs(queryRef);
+      const listCars = [] as CarProps[];
+      response.forEach((doc) => {
+        listCars.push({
+          id: doc.id,
+          name: doc.data().name,
+          year: doc.data().year,
+          km: doc.data().km,
+          city: doc.data().city,
+          price: doc.data().price,
+          images: doc.data().images,
+          uid: doc.data().uid,
+        });
+      });
+      setCars(listCars);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   function handleImageLoad(id: string) {
     setLoadImages((prevImageLoaded) => [...prevImageLoaded, id]);
+  }
+
+  async function handleSearchCar() {
+    if (input === '') {
+      loadPrevCars();
+      return;
+    }
+
+    setCars([]);
+    setLoadImages([]);
+
+    const q = query(
+      collection(db, 'cars'),
+      where('name', '>=', input.toUpperCase()),
+      where('name', '<=', input.toUpperCase() + '\uf8ff'),
+    );
+    const querySnapshot = await getDocs(q);
+
+    const listCars = [] as CarProps[];
+
+    querySnapshot.forEach((doc) => {
+      listCars.push({
+        id: doc.id,
+        name: doc.data().name,
+        year: doc.data().year,
+        km: doc.data().km,
+        city: doc.data().city,
+        price: doc.data().price,
+        images: doc.data().images,
+        uid: doc.data().uid,
+      });
+    });
+
+    setCars(listCars);
   }
 
   return (
@@ -49,8 +109,13 @@ export function Home() {
           type="text"
           placeholder="Digite o que procura"
           className="w-full border border-gray-200 rounded-sm py-2 px-5 outline-0"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
         />
-        <button className="bg-red-500 py-2 px-5 rounded-sm text-white cursor-pointer">
+        <button
+          className="bg-red-500 py-2 px-5 rounded-sm text-white cursor-pointer"
+          onClick={handleSearchCar}
+        >
           Buscar
         </button>
       </section>
